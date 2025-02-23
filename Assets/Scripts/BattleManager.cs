@@ -5,27 +5,43 @@ using System.Collections.Generic;
 public class BattleManager : MonoBehaviour
 {
     public GameObject gridTilePrefab; // Grid tile prefab
-    public Transform playerGridParent, enemyGridParent; // Separate parents for grids
-    public GameObject playerPrefab, enemyPrefab; // Prefabs for player and enemy units
 
-    public int gridSizeX = 5;
-    public int gridSizeY = 5;
+    public int gridSizeX = 12;
+    public int gridSizeY = 7;
     public float tileSpacing = 1f;
+    public Transform GridParent;
+    
+    public List<GameObject> playerPrefabs; // List of selectable player characters
+    public List<GameObject> enemyPrefabs;  // List of enemy prefabs
 
-    private Vector2 playerGridOrigin = new Vector2(-3, 0); // Left side
-    private Vector2 enemyGridOrigin = new Vector2(3, 0); // Right side
+    private GameObject selectedCharacter; // Current character to place
+    private Vector2 GridOrigin;
+    private Dictionary<Vector2, GameObject> occupiedTiles = new Dictionary<Vector2, GameObject>(); // Track occupied tiles
+    private List<Vector2> GridPositions = new List<Vector2>();
+    private CharacterManager characterManager;
+    private List<int> usedIndex=new List<int>();
+    private int index;
 
-    private List<Vector2> playerGridPositions = new List<Vector2>();
-    private List<Vector2> enemyGridPositions = new List<Vector2>();
 
     public List<Unit> units = new List<Unit>(); // List of all units in battle
     private int currentTurnIndex = 0;
 
     void Start()
     {
-        GenerateGrid(playerGridParent, playerGridOrigin, playerGridPositions);
-        GenerateGrid(enemyGridParent, enemyGridOrigin, enemyGridPositions);
-        SpawnUnits();
+        playerPrefabs=new List<GameObject>();
+        //enemyPrefabs=new List<GameObject>();
+        characterManager=GameObject.Find("CharacterManager").GetComponent<CharacterManager>();
+        GameObject[] prefabs=characterManager.GetCharacterPrefabs();
+        foreach(GameObject prefab in prefabs){
+            playerPrefabs.Add(prefab);
+        }
+        characterManager.ToggleIsInBattle(true);
+        float totalWidth = (gridSizeX - 1) * tileSpacing;
+        float totalHeight = (gridSizeY - 1) * tileSpacing;
+        GridOrigin = new Vector2(-totalWidth / 2, -totalHeight / 2);
+        GenerateGrid(GridParent, GridOrigin, GridPositions);
+
+        SpawnEnemies();
         StartCoroutine(StartBattle());
     }
 
@@ -37,30 +53,89 @@ public class BattleManager : MonoBehaviour
             {
                 Vector2 position = new Vector2(origin.x + (x * tileSpacing), origin.y + (y * tileSpacing));
                 gridPositions.Add(position);
-                Instantiate(gridTilePrefab, position, Quaternion.identity, parent);
+                GameObject tile = Instantiate(gridTilePrefab, position, Quaternion.identity, parent);
+                tile.AddComponent<TileClickHandler>().Init(this, position);
+            }
+        }
+    }
+    public void OnTileClicked(Vector2 tilePosition)
+    {
+        Debug.Log($"OnTileClicked called with position: {tilePosition}");
+        
+        if (selectedCharacter == null)
+        {
+            Debug.Log("No character selected. Cannot spawn.");
+            return;
+        }
+
+        float leftBoundary = GridOrigin.x;
+        float rightBoundary = GridOrigin.x + (4 * tileSpacing); 
+        float topBoundary = GridOrigin.y + ((gridSizeY - 1) * tileSpacing);
+        float bottomBoundary = GridOrigin.y;
+
+
+        if (tilePosition.x < leftBoundary || tilePosition.x >= rightBoundary || 
+            tilePosition.y < bottomBoundary || tilePosition.y > topBoundary || 
+            occupiedTiles.ContainsKey(tilePosition))
+        {
+            Debug.Log("Invalid tile or tile already occupied.");
+            return;
+        }
+
+        // Spawn the player unit
+        if(!usedIndex.Contains(index)){
+            GameObject unit = Instantiate(selectedCharacter, tilePosition, Quaternion.identity);
+            occupiedTiles[tilePosition] = unit; // Track the occupied tile
+            usedIndex.Add(index);
+            Debug.Log($"Player unit spawned at {tilePosition}");
+        }else{
+            Debug.Log($"Player unit already spawned");
+        }
+
+    }
+    void SpawnEnemies()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            int enemyX = Random.Range(gridSizeX - 4, gridSizeX);  // Last 4 columns
+            int enemyY = Random.Range(0, gridSizeY); 
+            Vector2 enemyStartPos = GetGridPosition(enemyX, enemyY);
+
+            if (enemyStartPos != Vector2.zero && enemyPrefabs.Count > 0)  
+            {
+                GameObject randomEnemy = enemyPrefabs[Random.Range(0, enemyPrefabs.Count)];
+                Instantiate(randomEnemy, enemyStartPos, Quaternion.identity);
             }
         }
     }
 
-    void SpawnUnits()
+    Vector2 GetGridPosition(int x, int y)
     {
-        Vector2 playerStartPos = playerGridPositions[12]; // Center of 5x5 grid
-        Vector2 enemyStartPos = enemyGridPositions[12];
-
-        GameObject playerUnit = Instantiate(playerPrefab, playerStartPos, Quaternion.identity);
-        GameObject enemyUnit = Instantiate(enemyPrefab, enemyStartPos, Quaternion.identity);
-
-        Unit playerScript = playerUnit.GetComponent<Unit>();
-        Unit enemyScript = enemyUnit.GetComponent<Unit>();
-
-        playerScript.battleManager = this;
-        enemyScript.battleManager = this;
-
-        units.Add(playerScript);
-        units.Add(enemyScript);
-
-        Debug.Log($"Player spawned at {playerStartPos}, Enemy spawned at {enemyStartPos}");
+        foreach (var pos in GridPositions)
+        {
+            if (Mathf.Approximately(pos.x, GridOrigin.x + (x * tileSpacing)) &&
+                Mathf.Approximately(pos.y, GridOrigin.y + (y * tileSpacing)))
+            {
+                return pos;
+            }
+        }
+        return Vector2.zero;
     }
+    public void SelectCharacter(int characterIndex)
+    {
+        if (characterIndex >= 0 && characterIndex < playerPrefabs.Count)
+        {
+            selectedCharacter = playerPrefabs[characterIndex];
+            index=characterIndex;
+            Debug.Log($"Selected {selectedCharacter.name}");
+        }
+        else
+        {
+            Debug.Log("Invalid character index selected.");
+        }
+    }
+
+
 
     IEnumerator StartBattle()
     {
@@ -138,3 +213,5 @@ IEnumerator EnemyTurn(Unit enemy)
         return closest;
     }
 }
+
+

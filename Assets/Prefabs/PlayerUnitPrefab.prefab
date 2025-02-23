@@ -176,6 +176,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4448af904b75795458293af50bb4ad4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  icon: {fileID: 10911, guid: 0000000000000000f000000000000000, type: 0}
   unitName: Player 1
   isPlayer: 1
   health: 100

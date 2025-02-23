@@ -1,7 +1,9 @@
 using UnityEngine;
 
-public class Unit : MonoBehaviour
+public class Unit : MonoBehaviour,InterfaceUnit
 {
+    [SerializeField] // Use this attribute to allow assignment in the Inspector
+    private Sprite icon; // Assign in Unity Inspector
     public string unitName;
     public bool isPlayer;
     public int health = 100;
@@ -48,6 +50,10 @@ public class Unit : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.A)) Move(Vector2Int.left);
             if (Input.GetKeyDown(KeyCode.D)) Move(Vector2Int.right);
         }
+    }
+    public Sprite Icon 
+    { 
+        get { return icon; } 
     }
 
     void Move(Vector2Int direction)
