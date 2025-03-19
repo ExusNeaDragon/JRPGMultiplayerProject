@@ -8,9 +8,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/OverworldScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/BattleScene.unity
-    guid: 4494c46dc4f1aae47b1dd44b9dde9761
+    guid: bbd68745b673f604cb56175da4a17801
+  - enabled: 1
+    path: Assets/Scenes/WorldLoader.unity
+    guid: ab43529e1f6c3f040ad871eb91b1d4ff
+  - enabled: 1
+    path: Assets/Scenes/Menu.unity
+    guid: bf24c1c0469bdc44c83a90c41fc2e327
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
