@@ -1,27 +1,25 @@
-using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerMovement : NetworkBehaviour
+public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;
     private Rigidbody2D rb;
-    private Vector2 movement;
+    private Vector2 moveInput;
 
     void Start()
     {
-        DontDestroyOnLoad(this);
         rb = GetComponent<Rigidbody2D>();
-        if(!IsOwner) return;
     }
 
     void Update()
     {
-        movement.x = Input.GetAxisRaw("Horizontal");
-        movement.y = Input.GetAxisRaw("Vertical");
+        moveInput.x = Input.GetAxisRaw("Horizontal");
+        moveInput.y = Input.GetAxisRaw("Vertical");
+        moveInput.Normalize(); // Prevents diagonal speed boost
     }
 
     void FixedUpdate()
     {
-        rb.MovePosition(rb.position + movement * moveSpeed * Time.fixedDeltaTime);
+        rb.linearVelocity = moveInput * moveSpeed;
     }
 }
