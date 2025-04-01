@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class PlayerSettings : NetworkBehaviour
 {
-    [SerializeField]private TextMeshPro playerName;
+    [SerializeField]private TMP_Text playerName;
     NetworkVariable<NetworkString> networkPlayerName= new NetworkVariable<NetworkString>("Unknown", NetworkVariableReadPermission.Everyone,NetworkVariableWritePermission.Owner);
     public override void OnNetworkSpawn(){
         if(IsOwner){
