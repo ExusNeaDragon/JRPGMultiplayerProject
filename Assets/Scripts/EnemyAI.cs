@@ -9,11 +9,14 @@ public class EnemyAI : NetworkBehaviour
     public float moveSpeed = 3f;
     public int attackDamage = 10;
     public float attackRange = 1.5f;
+    public float chaseRange = 7f;
+
     public float projectileRange = 5f;
     public GameObject projectilePrefab;
     public Transform firePoint;
 
     private PlayerStats playerStats;
+    private Vector3 originalScale;
     private List<IEnemyAbility> abilities = new List<IEnemyAbility>();
     private NetworkVariable<ulong> targetPlayerId = new NetworkVariable<ulong>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
@@ -23,6 +26,7 @@ public class EnemyAI : NetworkBehaviour
 
     void Start()
     {
+        originalScale = transform.localScale;
         hasNetworkManager = (NetworkManager.Singleton != null);
         abilities.AddRange(GetComponents<IEnemyAbility>());
 
@@ -78,9 +82,11 @@ public class EnemyAI : NetworkBehaviour
             {
                 AttackRanged();
             }
-            else
-            {
-                transform.position = Vector2.MoveTowards(transform.position, target.position, moveSpeed * Time.deltaTime);
+            else{
+                if (HasLineOfSight() && distanceToPlayer <= chaseRange){
+                    transform.position = Vector2.MoveTowards(transform.position, target.position, moveSpeed * Time.deltaTime);
+                    FlipSprite();
+                }
             }
         }
     }
@@ -128,6 +134,32 @@ public class EnemyAI : NetworkBehaviour
 
     }
 
+    bool HasLineOfSight()
+    {
+        if (target == null) return false;
+
+        Vector2 origin = transform.position;
+        Vector2 direction = (target.position - transform.position).normalized;
+        float distance = Vector2.Distance(transform.position, target.position);
+
+        RaycastHit2D hit = Physics2D.Raycast(origin, direction, distance, LayerMask.GetMask("Player", "Obstacles")); // Add walls/obstacles layers
+
+        if (hit.collider != null && hit.collider.CompareTag("Player"))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    void FlipSprite()
+    {
+        if (target == null) return;
+
+        Vector3 scale = originalScale;
+        scale.x *= target.position.x < transform.position.x ? -1 : 1;
+        transform.localScale = scale;
+    }
 
 
 
