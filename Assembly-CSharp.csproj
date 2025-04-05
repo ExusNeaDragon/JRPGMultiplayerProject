@@ -68,6 +68,7 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\PlayerCombat.cs" />
     <Compile Include="Assets\Scripts\EnemyMoves\Lich\FireballProjectile.cs" />
+    <Compile Include="Assets\Scripts\PlayerCameraSetup.cs" />
     <Compile Include="Assets\Scripts\EnemyStats.cs" />
     <Compile Include="Assets\Scripts\EnemyAI.cs" />
     <Compile Include="Assets\ParrelSync-master\ParrelSync-master\Examples\CustomArgumentExample.cs" />
@@ -87,9 +88,11 @@
     <Compile Include="Assets\Scripts\ClientNetworkTransform.cs" />
     <Compile Include="Assets\Scripts\Skill Creator\SkillCreatorMenu.cs" />
     <Compile Include="Assets\Scripts\EnemyMoves\Ghoul\Claw.cs" />
+    <Compile Include="Assets\Scripts\PlayerSpawner.cs" />
     <Compile Include="Assets\Scripts\EnemyMoves\Lich\SummonMinion.cs" />
     <Compile Include="Assets\Scripts\Skill Creator\ScalingSlider.cs" />
     <Compile Include="Assets\Scripts\EncounterManager.cs" />
+    <Compile Include="Assets\Scripts\CameraFollow.cs" />
     <Compile Include="Assets\Scripts\IEnemyAbility.cs" />
     <Compile Include="Assets\Scripts\PlayerSettings.cs" />
     <Compile Include="Assets\Scripts\EnemyMoves\Ghoul\RegenOverTime.cs" />

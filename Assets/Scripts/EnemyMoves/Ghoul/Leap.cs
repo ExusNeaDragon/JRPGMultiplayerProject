@@ -33,7 +33,7 @@ public class Leap : MonoBehaviour, IEnemyAbility
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("TransparentFX") || collision.gameObject.CompareTag("Player"))
+        if (collision.gameObject.CompareTag("Floor") || collision.gameObject.CompareTag("Wall") || collision.gameObject.CompareTag("Player"))
         {
             isLeaping = false; // Reset when landing
         }

@@ -9,29 +9,53 @@ public class PlayerController : NetworkBehaviour
     private PlayerStats playerStats;
     private PlayerCombat playerCombat;
 
-    void Start()
+    private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         playerStats = GetComponent<PlayerStats>();
         playerCombat = GetComponent<PlayerCombat>();
     }
 
-    void Update()
+    private void Update()
     {
-        if (!IsOwner) return; // Ensure only the local player controls movement
+        if (!IsControllingPlayer()) return; // Ensure only the local player processes input
 
+        // Get movement input
         moveInput.x = Input.GetAxis("Horizontal");
         moveInput.y = Input.GetAxis("Vertical");
 
-        if (Input.GetMouseButtonDown(0)) // Left click to attack
+        // Handle attack input (left mouse button)
+        if (Input.GetMouseButtonDown(0))
         {
-            playerCombat.AttackServerRpc();
+            if (IsOwner) // Only the owner can attack
+            {
+                playerCombat.AttackServerRpc();
+            }
         }
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
-        if (!IsOwner) return;
-        rb.linearVelocity = moveInput.normalized * moveSpeed;
+        if (!IsControllingPlayer()) return;
+
+        if (IsControllingPlayer())
+        {
+            // Update movement
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.linearVelocity = moveInput.normalized * moveSpeed;
+        }
+    }
+
+    // Helper method to decide if this player can control the character
+    private bool IsControllingPlayer()
+    {
+        // Single-player mode: No NetworkManager, directly control the player
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+        {
+            return true; // Always control the player in single-player
+        }
+
+        // In multiplayer mode, only the owner can control their player
+        return IsOwner;
     }
 }

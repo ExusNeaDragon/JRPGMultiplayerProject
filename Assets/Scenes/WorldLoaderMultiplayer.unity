@@ -2167,6 +2167,7 @@ GameObject:
   - component: {fileID: 1082448568}
   - component: {fileID: 1082448570}
   - component: {fileID: 1082448569}
+  - component: {fileID: 1082448571}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -2234,8 +2235,7 @@ MonoBehaviour:
   NetworkConfig:
     ProtocolVersion: 0
     NetworkTransport: {fileID: 1082448569}
-    PlayerPrefab: {fileID: 8423904848561396914, guid: 5bef67ce98b3cfd449086cda3e4e93b5,
-      type: 3}
+    PlayerPrefab: {fileID: 0}
     Prefabs:
       NetworkPrefabsLists:
       - {fileID: 11400000, guid: 42d2102a59d63b24493d6a0637b3d1bd, type: 2}
@@ -2261,6 +2261,20 @@ MonoBehaviour:
     OldPrefabList: []
   RunInBackground: 1
   LogLevel: 1
+--- !u!114 &1082448571
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1082448565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 406985c81cd66084f85043b4017fe58d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerPrefab: {fileID: 8423904848561396914, guid: 5bef67ce98b3cfd449086cda3e4e93b5,
+    type: 3}
 --- !u!1 &1164878023
 GameObject:
   m_ObjectHideFlags: 0
@@ -4833,6 +4847,6 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1066629594}
-  - {fileID: 1082448568}
   - {fileID: 348171656}
   - {fileID: 221396096}
+  - {fileID: 1082448568}

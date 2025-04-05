@@ -4,7 +4,7 @@ using Unity.Netcode;
 
 public class EnemyAI : NetworkBehaviour
 {
-    public enum EnemyType{Melee,Ranged};
+    public enum EnemyType { Melee, Ranged };
     public EnemyType enemyType;
     public float moveSpeed = 3f;
     public int attackDamage = 10;
@@ -15,29 +15,53 @@ public class EnemyAI : NetworkBehaviour
 
     private PlayerStats playerStats;
     private List<IEnemyAbility> abilities = new List<IEnemyAbility>();
-
     private NetworkVariable<ulong> targetPlayerId = new NetworkVariable<ulong>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+
+    private bool hasNetworkManager;
     public Transform target;
 
     void Start()
     {
+        hasNetworkManager = (NetworkManager.Singleton != null);
         abilities.AddRange(GetComponents<IEnemyAbility>());
-        
-        if (IsServer || !NetworkManager.Singleton.IsConnectedClient) // Works for LAN host & single-player
+
+        if (!hasNetworkManager || IsServer)
         {
-            InvokeRepeating(nameof(UpdateTarget), 0f, 1f); // Update target every second
+            InvokeRepeating(nameof(UpdateTarget), 0f, 1f);
+        }
+
+        if (hasNetworkManager)
+        {
+            targetPlayerId.OnValueChanged += (oldValue, newValue) => AssignTargetFromNetworkId();
+        }
+    }
+
+    void AssignTargetFromNetworkId()
+    {
+        if (targetPlayerId.Value == 0) return; // No valid target assigned
+
+        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetPlayerId.Value, out NetworkObject playerObject))
+        {
+            target = playerObject.transform;
+            Debug.Log($"[EnemyAI] Client assigned target: {target.name} (ID: {targetPlayerId.Value})");
+        }
+        else
+        {
+            Debug.LogWarning($"[EnemyAI] Failed to find player with ID {targetPlayerId.Value}");
         }
     }
 
     void Update()
     {
-        if (IsServer || !NetworkManager.Singleton.IsConnectedClient) // Runs if host or in single-player
+        if (target == null && IsClient) 
         {
-            if (target == null)
-            {
-                AssignTargetFromNetworkId();
-                return;
-            }
+            AssignTargetFromNetworkId(); // Ensure clients always assign target
+        }
+
+        if (IsServer || !hasNetworkManager) 
+        {
+            if (target == null) return;
 
             float distanceToPlayer = Vector2.Distance(transform.position, target.position);
 
@@ -56,15 +80,19 @@ public class EnemyAI : NetworkBehaviour
             }
             else
             {
-                // Move enemy only if it's the server, or in single-player mode
                 transform.position = Vector2.MoveTowards(transform.position, target.position, moveSpeed * Time.deltaTime);
             }
         }
     }
 
+
     void UpdateTarget()
     {
+        if (hasNetworkManager && !IsServer) return;
+
         PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        Debug.Log($"[EnemyAI] Found {players.Length} players.");
+        
         float closestDistance = Mathf.Infinity;
         Transform closestPlayer = null;
         ulong closestPlayerId = 0;
@@ -72,15 +100,13 @@ public class EnemyAI : NetworkBehaviour
         foreach (var player in players)
         {
             float distance = Vector2.Distance(transform.position, player.transform.position);
+            Debug.Log($"[EnemyAI] Checking player {player.name}, Distance: {distance}");
+
             if (distance < closestDistance)
             {
                 closestDistance = distance;
                 closestPlayer = player.transform;
-
-                if (NetworkManager.Singleton.IsConnectedClient) // If in LAN, get the player's NetworkObjectId
-                {
-                    closestPlayerId = player.GetComponent<NetworkObject>().NetworkObjectId;
-                }
+                closestPlayerId = player.GetComponent<NetworkObject>().NetworkObjectId;
             }
         }
 
@@ -88,22 +114,22 @@ public class EnemyAI : NetworkBehaviour
         {
             target = closestPlayer;
 
-            if (IsServer && NetworkManager.Singleton.IsConnectedClient) // Sync target only if multiplayer
+            if (hasNetworkManager && IsServer)
             {
+                // Sync only if in networked mode
                 targetPlayerId.Value = closestPlayerId;
+                Debug.Log($"[EnemyAI] Server assigned target: {closestPlayer.name} (ID: {closestPlayerId})");
+            }
+            else
+            {
+                Debug.Log($"[EnemyAI] Single-player target assigned: {closestPlayer.name}");
             }
         }
+
     }
 
-    void AssignTargetFromNetworkId()
-    {
-        if (!NetworkManager.Singleton.IsConnectedClient || targetPlayerId.Value == 0) return;
 
-        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetPlayerId.Value, out NetworkObject playerObject))
-        {
-            target = playerObject.transform;
-        }
-    }
+
 
     void AttackMelee()
     {
@@ -126,7 +152,7 @@ public class EnemyAI : NetworkBehaviour
             GameObject projectile = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
             Rigidbody2D rb = projectile.GetComponent<Rigidbody2D>();
             Vector2 direction = (target.position - firePoint.position).normalized;
-            rb.linearVelocity = direction * 5f; // Fixed: use velocity, not linearVelocity
+            rb.linearVelocity = direction * 5f; // Fixed: use velocity instead of linearVelocity
         }
     }
 }

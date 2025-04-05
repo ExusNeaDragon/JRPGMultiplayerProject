@@ -9,7 +9,7 @@ EditorBuildSettings:
     path: Assets/Scenes/Menu.unity
     guid: bf24c1c0469bdc44c83a90c41fc2e327
   - enabled: 1
-    path: Assets/Scenes/WorldLoader.unity
+    path: Assets/Scenes/WorldLoaderMultiplayer.unity
     guid: ab43529e1f6c3f040ad871eb91b1d4ff
   - enabled: 1
     path: Assets/Scenes/Level 1.unity
@@ -23,5 +23,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/UI.unity
     guid: 631d9f0709855e34aa2662f2eb3e7636
+  - enabled: 1
+    path: Assets/Scenes/WorldLoaderSingleplayer.unity
+    guid: 1001e384c6d13534e81e4f8277df725b
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
