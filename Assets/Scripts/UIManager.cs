@@ -6,7 +6,6 @@ using Unity.Netcode; // Optional - only used if NetworkManager exists
 
 public class UIManager : MonoBehaviour
 {
-    [SerializeField] public TMP_InputField nameInput;
     [SerializeField] public Button menuButton;
     [SerializeField] public Button hostButton;
     [SerializeField] public Button joinButton;
@@ -15,6 +14,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_InputField ipInput;
     [SerializeField] private TMP_Text HostIpInfo;
     [SerializeField] private TMP_Text NotificationText;
+    [SerializeField] public TMP_InputField nameInput;
 
     private bool hasNetworkManager;
 

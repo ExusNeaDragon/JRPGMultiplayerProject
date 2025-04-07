@@ -209,6 +209,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &289868724
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 289868725}
+  m_Layer: 0
+  m_Name: SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &289868725
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 289868724}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 14.38, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &348171654
 GameObject:
   m_ObjectHideFlags: 0
@@ -238,7 +269,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2f7b25cc886ed34ead451293d8af61a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nameInput: {fileID: 1654761085}
   menuButton: {fileID: 1624266087}
   hostButton: {fileID: 375054450}
   joinButton: {fileID: 1000828236}
@@ -247,6 +277,7 @@ MonoBehaviour:
   ipInput: {fileID: 1591065105}
   HostIpInfo: {fileID: 744139241}
   NotificationText: {fileID: 1403662656}
+  nameInput: {fileID: 1654761085}
 --- !u!4 &348171656
 Transform:
   m_ObjectHideFlags: 0
@@ -2167,7 +2198,6 @@ GameObject:
   - component: {fileID: 1082448568}
   - component: {fileID: 1082448570}
   - component: {fileID: 1082448569}
-  - component: {fileID: 1082448571}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -2235,7 +2265,8 @@ MonoBehaviour:
   NetworkConfig:
     ProtocolVersion: 0
     NetworkTransport: {fileID: 1082448569}
-    PlayerPrefab: {fileID: 0}
+    PlayerPrefab: {fileID: 8423904848561396914, guid: 5bef67ce98b3cfd449086cda3e4e93b5,
+      type: 3}
     Prefabs:
       NetworkPrefabsLists:
       - {fileID: 11400000, guid: 42d2102a59d63b24493d6a0637b3d1bd, type: 2}
@@ -2261,20 +2292,6 @@ MonoBehaviour:
     OldPrefabList: []
   RunInBackground: 1
   LogLevel: 1
---- !u!114 &1082448571
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1082448565}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 406985c81cd66084f85043b4017fe58d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerPrefab: {fileID: 8423904848561396914, guid: 5bef67ce98b3cfd449086cda3e4e93b5,
-    type: 3}
 --- !u!1 &1164878023
 GameObject:
   m_ObjectHideFlags: 0
@@ -4850,3 +4867,4 @@ SceneRoots:
   - {fileID: 348171656}
   - {fileID: 221396096}
   - {fileID: 1082448568}
+  - {fileID: 289868725}

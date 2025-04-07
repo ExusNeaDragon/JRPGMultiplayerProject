@@ -1,61 +1,32 @@
 using UnityEngine;
 using Unity.Netcode;
+using UnityEngine.SceneManagement;
 
 public class PlayerSpawner : MonoBehaviour
 {
-    public GameObject playerPrefab; // Player prefab with camera attached
-    private Transform spawnPoint; // Assign in Inspector or Find in Scene
+    public GameObject playerPrefab;
+    private Transform spawnPoint;
 
     private void Start()
     {
-        // Ensure spawn point exists before spawning
-        if (spawnPoint == null)
-        {
-            GameObject sp = GameObject.Find("SpawnPoint");
-            if (sp != null) spawnPoint = sp.transform;
-            else Debug.LogError("SpawnPoint not found in scene!");
-        }
+        DontDestroyOnLoad(gameObject);
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        FindSpawnPoint();
 
         if (NetworkManager.Singleton != null)
         {
-            if (NetworkManager.Singleton.IsHost)
+            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
             {
-                // Host is both server and player. Spawn for the host and other clients.
-                SpawnPlayer(NetworkManager.Singleton.LocalClientId);
-                foreach (var client in NetworkManager.Singleton.ConnectedClients)
-                {
-                    if (client.Key != NetworkManager.Singleton.LocalClientId)
-                    {
-                        SpawnPlayer(client.Key);
-                    }
-                }
-            }
-            else if (NetworkManager.Singleton.IsServer)
-            {
-                // Server is responsible for spawning players for all clients
-                foreach (var client in NetworkManager.Singleton.ConnectedClients)
-                {
-                    SpawnPlayer(client.Key);
-                }
+                // Server or Host automatically handles player spawning.
             }
             else
             {
-                // Client listens for connection and spawns player when connected
                 NetworkManager.Singleton.OnClientConnectedCallback += SpawnPlayer;
             }
         }
         else
         {
-            // Single Player: Spawn immediately
-            SpawnLocalPlayer();
-        }
-    }
-
-    private void OnEnable()
-    {
-        if (NetworkManager.Singleton != null && !NetworkManager.Singleton.IsServer)
-        {
-            NetworkManager.Singleton.OnClientConnectedCallback += SpawnPlayer;
+            SpawnLocalPlayer();  // For local play
         }
     }
 
@@ -65,26 +36,83 @@ public class PlayerSpawner : MonoBehaviour
         {
             NetworkManager.Singleton.OnClientConnectedCallback -= SpawnPlayer;
         }
+
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    void SpawnPlayer(ulong clientId){
-    if (playerPrefab == null || spawnPoint == null) return;
-
-    GameObject player = Instantiate(playerPrefab, spawnPoint.position, Quaternion.identity);
-    NetworkObject networkObject = player.GetComponent<NetworkObject>();
-
-    if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost){
-        networkObject.SpawnAsPlayerObject(clientId);
-    }
-    else{
-        networkObject.Spawn(); // Client-side instantiation
-    }
+    private void FindSpawnPoint()
+    {
+        GameObject sp = GameObject.Find("SpawnPoint");
+        if (sp != null) spawnPoint = sp.transform;
+        else Debug.LogError("SpawnPoint not found in scene!");
     }
 
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        FindSpawnPoint();
 
-    void SpawnLocalPlayer(){
-    if (playerPrefab == null || spawnPoint == null) return;
-    Instantiate(playerPrefab, spawnPoint.position, Quaternion.identity);
+        if (spawnPoint != null)
+        {
+            // Freeze players and move them to spawn point if needed
+            var network=FindObjectsByType<NetworkObject>(FindObjectsSortMode.None);
+            foreach (var networkObj in network)
+            {
+                if (networkObj.IsPlayerObject)
+                {
+                    GameObject playerObj = networkObj.gameObject;
+                    playerObj.transform.position = spawnPoint.position;
+
+                    // Freeze movement in specific scenes
+                    if (scene.name == "WorldLoaderMultiplayer" || scene.name == "WorldLoaderSingleplayer")
+                    {
+                        var controller = playerObj.GetComponent<PlayerController>();
+                        if (controller != null)
+                            controller.FreezeMovement();
+                    }
+                }
+            }
+        }
     }
 
+    private void SpawnPlayer(ulong clientId)
+    {
+        if (playerPrefab == null || spawnPoint == null) return;
+
+        // Dynamically spawn players
+        GameObject player = Instantiate(playerPrefab, spawnPoint.position, Quaternion.identity);
+        player.name = $"Player {clientId}";
+
+        NetworkObject networkObject = player.GetComponent<NetworkObject>();
+        if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost)
+        {
+            networkObject.SpawnAsPlayerObject(clientId);
+        }
+        else
+        {
+            networkObject.Spawn();
+        }
+
+        // Additional logic like freezing movement
+        if (SceneManager.GetActiveScene().name == "WorldLoaderMultiplayer" || SceneManager.GetActiveScene().name == "WorldLoaderSingleplayer")
+        {
+            var movement = player.GetComponent<PlayerController>();
+            if (movement != null) movement.FreezeMovement();
+        }
+    }
+
+    private void SpawnLocalPlayer()
+    {
+        if (playerPrefab == null || spawnPoint == null) return;
+
+        // Instantiate player for local mode
+        GameObject player = Instantiate(playerPrefab, spawnPoint.position, Quaternion.identity);
+        player.name = "LocalPlayer";
+
+        // Additional logic for freezing movement
+        if (SceneManager.GetActiveScene().name == "WorldLoaderMultiplayer" || SceneManager.GetActiveScene().name == "WorldLoaderSingleplayer")
+        {
+            var movement = player.GetComponent<PlayerController>();
+            if (movement != null) movement.FreezeMovement();
+        }
+    }
 }

@@ -8,6 +8,7 @@ public class PlayerController : NetworkBehaviour
     private Vector2 moveInput;
     private PlayerStats playerStats;
     private PlayerCombat playerCombat;
+    public bool canMove = true;
 
     private void Start()
     {
@@ -18,7 +19,7 @@ public class PlayerController : NetworkBehaviour
 
     private void Update()
     {
-        if (!IsControllingPlayer()) return; // Ensure only the local player processes input
+        if (!IsControllingPlayer()||!canMove) return; // Ensure only the local player processes input
 
         // Get movement input
         moveInput.x = Input.GetAxis("Horizontal");
@@ -33,6 +34,26 @@ public class PlayerController : NetworkBehaviour
             }
         }
     }
+    public void FreezeMovement()
+    {
+        canMove = false;
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        }
+    }
+    public void UnfreezeMovement()
+    {
+        canMove = true;
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        }
+    }
+    
 
     private void FixedUpdate()
     {
