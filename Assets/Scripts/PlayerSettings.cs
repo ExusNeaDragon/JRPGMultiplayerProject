@@ -13,10 +13,6 @@ public class PlayerSettings : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        if (IsOwner)
-        {
-            DontDestroyOnLoad(gameObject);
-        }
 
         // Update the player name text when it changes on the network
         networkPlayerName.OnValueChanged += NetworkPlayerName_OnValueChanged;

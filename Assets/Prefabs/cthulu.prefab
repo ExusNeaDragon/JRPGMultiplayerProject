@@ -18,6 +18,8 @@ GameObject:
   - component: {fileID: 6952696480007605397}
   - component: {fileID: 2097615521020557756}
   - component: {fileID: 7113802334010357678}
+  - component: {fileID: -5388946157965463985}
+  - component: {fileID: -1422788733351359090}
   m_Layer: 6
   m_Name: cthulu
   m_TagString: Enemy
@@ -208,7 +210,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 6, y: 3.5030692}
+    oldSize: {x: 6, y: 3.5}
     newSize: {x: 0.62, y: 0.65057}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -229,13 +231,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  enemyType: 0
-  moveSpeed: 3
-  attackDamage: 10
-  attackRange: 1.5
-  projectileRange: 5
-  projectilePrefab: {fileID: 0}
-  firePoint: {fileID: 0}
   target: {fileID: 0}
 --- !u!114 &6952696480007605397
 MonoBehaviour:
@@ -254,6 +249,13 @@ MonoBehaviour:
     m_InternalValue: 600
   currentHealth:
     m_InternalValue: 600
+  localMaxHealth: 600
+  localCurrentHealth: 600
+  moveSpeed: 3
+  attackDamage: 10
+  attackRange: 1.5
+  chaseRange: 7
+  projectileRange: 5
 --- !u!114 &2097615521020557756
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -328,7 +330,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 6, y: 3.5030692}
+    oldSize: {x: 6, y: 3.5}
     newSize: {x: 0.62, y: 0.65057}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -336,3 +338,67 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 3, y: 2}
   m_EdgeRadius: 0
+--- !u!114 &-5388946157965463985
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2404617884144857482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8d0727d5ae3244e3b569694d3912374, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  TransitionStateInfoList:
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -601574123
+    DestinationState: -1919845803
+    TransitionDuration: 0.25
+    TriggerNameHash: -1919845803
+    TransitionIndex: 0
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -601574123
+    DestinationState: -614864471
+    TransitionDuration: 0.25
+    TriggerNameHash: 1203776827
+    TransitionIndex: 1
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -601574123
+    DestinationState: -806913119
+    TransitionDuration: 0.25
+    TriggerNameHash: 1203776827
+    TransitionIndex: 2
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -601574123
+    DestinationState: -947059686
+    TransitionDuration: 0.25
+    TriggerNameHash: 1523721793
+    TransitionIndex: 3
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -601574123
+    DestinationState: -414722770
+    TransitionDuration: 0.25
+    TriggerNameHash: -414722770
+    TransitionIndex: 4
+  m_Animator: {fileID: 7022078873605734223}
+--- !u!114 &-1422788733351359090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2404617884144857482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a58a4790d951b1747bbd81658489d52f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fireballPrefab: {fileID: 2660376597030810567, guid: f9b5cf45c1cdce24e930ccc8f3d448c8,
+    type: 3}

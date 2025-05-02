@@ -2,7 +2,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Unity.Netcode; // Optional - only used if NetworkManager exists
+using Unity.Netcode;
+using MyGameNamespace;
+using UnityEngine.InputSystem.LowLevel;
 
 public class UIManager : MonoBehaviour
 {
@@ -20,6 +22,9 @@ public class UIManager : MonoBehaviour
 
     void Start()
     {
+        // Default to Single Player mode
+        GameState.IsSinglePlayer = true;
+
         // Check if NetworkManager exists
         hasNetworkManager = (NetworkManager.Singleton != null);
 
@@ -29,7 +34,7 @@ public class UIManager : MonoBehaviour
             {
                 if (SceneManager.GetActiveScene().name != "Menu")
                 {
-                    Destroy(GameObject.Find("NetworkManager"));
+                    // Load the Menu Scene without destroying the NetworkManager
                     SceneManager.LoadScene("Menu");
                 }
             });
@@ -39,20 +44,18 @@ public class UIManager : MonoBehaviour
         {
             startButton.onClick.AddListener(() =>
             {
-                if (!hasNetworkManager) // No NetworkManager → Single Player Mode
+                if (!hasNetworkManager || (!NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsServer))
                 {
+                    // Single-player mode
                     Debug.Log("Starting Single Player Mode");
+                    GameState.IsSinglePlayer = true;  // Set single-player mode
                     SceneManager.LoadScene("Level 1");
-                }
-                else if (!NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsServer)
-                {
-                    Debug.Log("Starting Single Player Mode");
-                    Destroy(GameObject.Find("NetworkManager"));
-                    SceneManager.LoadScene("Level 1"); // Single Player
                 }
                 else if (NetworkManager.Singleton.IsHost)
                 {
+                    // Multiplayer mode as host
                     Debug.Log("Starting Multi Player Mode");
+                    GameState.IsSinglePlayer = false;  // Set multiplayer mode
                     NetworkManager.Singleton.SceneManager.LoadScene("Level 1", LoadSceneMode.Single);
                 }
                 else
@@ -73,6 +76,7 @@ public class UIManager : MonoBehaviour
                     return;
                 }
 
+                // Start host for multiplayer
                 NetworkManager.Singleton.StartHost();
                 var transport = NetworkManager.Singleton.GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>();
 
@@ -84,6 +88,9 @@ public class UIManager : MonoBehaviour
                 {
                     HostIpInfo.SetText("Host started, but no transport found.");
                 }
+
+                // Switch to multiplayer
+                GameState.IsSinglePlayer = false;
             });
 
             joinButton.onClick.AddListener(() =>
@@ -117,6 +124,9 @@ public class UIManager : MonoBehaviour
                             NotificationText.SetText("Connected to host!");
                         }
                     };
+
+                    // Switch to multiplayer
+                    GameState.IsSinglePlayer = false;
                 }
                 else
                 {

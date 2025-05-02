@@ -1,6 +1,7 @@
-using UnityEngine;
 using Unity.Netcode;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using MyGameNamespace;
 
 public class PlayerSpawner : MonoBehaviour
 {
@@ -9,30 +10,38 @@ public class PlayerSpawner : MonoBehaviour
 
     private void Start()
     {
-        DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
         FindSpawnPoint();
-
-        if (NetworkManager.Singleton != null)
+        
+        if (GameState.IsSinglePlayer)
         {
+            // Single-player setup (NetworkManager will handle spawning)
+            if (!NetworkManager.Singleton.IsHost && !NetworkManager.Singleton.IsServer)
+            {
+                NetworkManager.Singleton.StartHost(); // Start the host for single-player
+            }
+
+            SpawnLocalPlayer();
+        }
+        else if (NetworkManager.Singleton != null)
+        {
+            // Multiplayer setup
             if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsServer)
             {
-                // Server or Host automatically handles player spawning.
+                // Server/Host auto-handles spawning
             }
             else
             {
                 NetworkManager.Singleton.OnClientConnectedCallback += SpawnPlayer;
             }
         }
-        else
-        {
-            SpawnLocalPlayer();  // For local play
-        }
     }
 
     private void OnDisable()
     {
-        if (NetworkManager.Singleton != null && !NetworkManager.Singleton.IsServer)
+        if (!GameState.IsSinglePlayer &&
+            NetworkManager.Singleton != null &&
+            !NetworkManager.Singleton.IsServer)
         {
             NetworkManager.Singleton.OnClientConnectedCallback -= SpawnPlayer;
         }
@@ -53,16 +62,14 @@ public class PlayerSpawner : MonoBehaviour
 
         if (spawnPoint != null)
         {
-            // Freeze players and move them to spawn point if needed
-            var network=FindObjectsByType<NetworkObject>(FindObjectsSortMode.None);
-            foreach (var networkObj in network)
+            var players = FindObjectsByType<NetworkObject>(FindObjectsSortMode.None);
+            foreach (var networkObj in players)
             {
                 if (networkObj.IsPlayerObject)
                 {
                     GameObject playerObj = networkObj.gameObject;
                     playerObj.transform.position = spawnPoint.position;
 
-                    // Freeze movement in specific scenes
                     if (scene.name == "WorldLoaderMultiplayer" || scene.name == "WorldLoaderSingleplayer")
                     {
                         var controller = playerObj.GetComponent<PlayerController>();
@@ -78,11 +85,10 @@ public class PlayerSpawner : MonoBehaviour
     {
         if (playerPrefab == null || spawnPoint == null) return;
 
-        // Dynamically spawn players
         GameObject player = Instantiate(playerPrefab, spawnPoint.position, Quaternion.identity);
         player.name = $"Player {clientId}";
 
-        NetworkObject networkObject = player.GetComponent<NetworkObject>();
+        var networkObject = player.GetComponent<NetworkObject>();
         if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost)
         {
             networkObject.SpawnAsPlayerObject(clientId);
@@ -92,7 +98,6 @@ public class PlayerSpawner : MonoBehaviour
             networkObject.Spawn();
         }
 
-        // Additional logic like freezing movement
         if (SceneManager.GetActiveScene().name == "WorldLoaderMultiplayer" || SceneManager.GetActiveScene().name == "WorldLoaderSingleplayer")
         {
             var movement = player.GetComponent<PlayerController>();
@@ -104,15 +109,24 @@ public class PlayerSpawner : MonoBehaviour
     {
         if (playerPrefab == null || spawnPoint == null) return;
 
-        // Instantiate player for local mode
-        GameObject player = Instantiate(playerPrefab, spawnPoint.position, Quaternion.identity);
-        player.name = "LocalPlayer";
-
-        // Additional logic for freezing movement
-        if (SceneManager.GetActiveScene().name == "WorldLoaderMultiplayer" || SceneManager.GetActiveScene().name == "WorldLoaderSingleplayer")
+        // Start the NetworkManager in single-player mode (auto-spawns player)
+        if (!NetworkManager.Singleton.IsHost && !NetworkManager.Singleton.IsServer)
         {
-            var movement = player.GetComponent<PlayerController>();
-            if (movement != null) movement.FreezeMovement();
+            NetworkManager.Singleton.StartHost(); // This spawns the playerPrefab
+        }
+
+        // Player prefab will not be set to DontDestroyOnLoad in either mode
+        // Let the NetworkManager handle the persistence
+
+        // Wait briefly or ensure player is spawned before using it
+        if (SceneManager.GetActiveScene().name == "WorldLoaderMultiplayer" ||
+            SceneManager.GetActiveScene().name == "WorldLoaderSingleplayer")
+        {
+            var localPlayer = NetworkManager.Singleton.LocalClient?.PlayerObject?.GetComponent<PlayerController>();
+            if (localPlayer != null)
+            {
+                localPlayer.FreezeMovement();
+            }
         }
     }
 }
