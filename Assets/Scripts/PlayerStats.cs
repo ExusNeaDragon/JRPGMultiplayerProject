@@ -29,47 +29,71 @@ public class PlayerStats : NetworkBehaviour
 
     public void TakeDamage(int damage)
     {
-        bool isMultiplayer = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
-        bool isServer = IsServer;
-
-        int finalDamage;
-
-        if (isMultiplayer)
+        if (NetworkManager.Singleton.IsListening) // Multiplayer
         {
-            if (!isServer)
-                return; // Only the server modifies networked health
+            if (!IsServer)
+                return;
 
-            finalDamage = Mathf.Max(damage - defense.Value, 1);
+            int finalDamage = Mathf.Max(damage - defense.Value, 1);
             currentHealth.Value -= finalDamage;
+
             Debug.Log($"[Multiplayer] Player took {finalDamage} damage. Health: {currentHealth.Value}");
 
             if (currentHealth.Value <= 0)
-                DieClientRpc();
+            {
+                isDead.Value = true;
+                DieClientRpc(new ClientRpcParams {
+                    Send = new ClientRpcSendParams {
+                        TargetClientIds = new ulong[] { OwnerClientId }
+                    }
+                });
+            }
         }
-        else
+        else // Local single-player
         {
-            finalDamage = Mathf.Max(damage - localDefense, 1);
+            int finalDamage = Mathf.Max(damage - localDefense, 1);
             localCurrentHealth -= finalDamage;
             Debug.Log($"[Local] Player took {finalDamage} damage. Health: {localCurrentHealth}");
 
             if (localCurrentHealth <= 0)
+            {
                 Die();
+            }
         }
     }
 
     [ClientRpc]
-    void DieClientRpc() => Die();
+    void DieClientRpc(ClientRpcParams rpcParams = default)
+    {
+        Die(); // Only called on client that owns the dead player
+    }
 
     void Die()
     {
         Debug.Log("Player has died.");
         animator?.SetTrigger("death");
-
         GetComponent<PlayerController>()?.FreezeMovement();
-        isDead.Value = true;
 
         if (IsOwner && gameOverUI != null)
             gameOverUI.SetActive(true);
     }
+
+    public void Respawn()
+    {
+        currentHealth.Value = maxHealth.Value;
+        isDead.Value = false;
+        animator?.SetTrigger("respawn");
+        GetComponent<PlayerController>()?.UnfreezeMovement();
+
+        if (IsOwner && gameOverUI != null)
+            gameOverUI.SetActive(false);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestRespawnServerRpc()
+    {
+        Respawn();
+    }
+
 
 }

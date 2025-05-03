@@ -5,6 +5,8 @@ using UnityEngine.UI;
 using Unity.Netcode;
 using MyGameNamespace;
 using UnityEngine.InputSystem.LowLevel;
+using System.Net;
+using System.Linq;
 
 public class UIManager : MonoBehaviour
 {
@@ -82,7 +84,9 @@ public class UIManager : MonoBehaviour
 
                 if (transport != null)
                 {
-                    HostIpInfo.SetText("Host started on IP: " + transport.ConnectionData.Address);
+                    string localIp = GetLocalIPv4();
+                    HostIpInfo.SetText($"Host started on LAN IP: {localIp}");
+                    Debug.Log($"Host started on LAN IP: {localIp}");
                 }
                 else
                 {
@@ -135,5 +139,19 @@ public class UIManager : MonoBehaviour
                 }
             });
         }
+    }
+     private string GetLocalIPv4()
+    {
+        string localIP = "Unavailable";
+        var host = Dns.GetHostEntry(Dns.GetHostName());
+        foreach (var ip in host.AddressList)
+        {
+            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            {
+                localIP = ip.ToString();
+                break;
+            }
+        }
+        return localIP;
     }
 }

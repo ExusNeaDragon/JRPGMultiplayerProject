@@ -16,15 +16,16 @@ public class GameOverUI : MonoBehaviour
 
     void OnRespawnButtonClick()
     {
+        PlayerStats stats = GetComponentInParent<PlayerStats>();
+        if (stats == null) return;
+
         if (NetworkManager.Singleton.IsServer)
         {
-            // Trigger respawn logic on the server (host)
-            RespawnPlayer();
+            stats.Respawn();
         }
         else
         {
-            // Client requests respawn
-            RequestRespawnServerRpc();
+            stats.RequestRespawnServerRpc();
         }
     }
 
