@@ -68,6 +68,7 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\Block.cs" />
     <Compile Include="Assets\Scripts\PlayerCombat.cs" />
+    <Compile Include="Assets\Scripts\QuitButton.cs" />
     <Compile Include="Assets\Scripts\PlayerCameraSetup.cs" />
     <Compile Include="Assets\Scripts\EnemyStats.cs" />
     <Compile Include="Assets\Scripts\EnemyMoves\Mushroom\Claw.cs" />
@@ -106,7 +107,7 @@
     <Compile Include="Assets\Scripts\CameraFollow.cs" />
     <Compile Include="Assets\Scripts\IEnemyAbility.cs" />
     <Compile Include="Assets\Scripts\PlayerSettings.cs" />
-    <Compile Include="Assets\StartMenu.cs" />
+    <Compile Include="Assets\Scripts\StartMenu.cs" />
     <Compile Include="Assets\Scripts\EnemyMoves\FireWorm\EnemyProjectile.cs" />
     <Compile Include="Assets\Scripts\GameState.cs" />
   </ItemGroup>
