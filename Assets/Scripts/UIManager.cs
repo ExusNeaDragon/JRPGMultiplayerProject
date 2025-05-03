@@ -4,9 +4,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Unity.Netcode;
 using MyGameNamespace;
-using System.Net;
-using System.Net.Sockets;
-using System.Collections;
+using UnityEngine.InputSystem.LowLevel;
 
 public class UIManager : MonoBehaviour
 {
@@ -21,8 +19,6 @@ public class UIManager : MonoBehaviour
     [SerializeField] public TMP_InputField nameInput;
 
     private bool hasNetworkManager;
-    private UdpClient udpClient;
-    private IPEndPoint endPoint;
 
     void Start()
     {
@@ -80,15 +76,9 @@ public class UIManager : MonoBehaviour
                     return;
                 }
 
-                string localIP = GetLocalWiFiIPAddress();
-
-                var transport = NetworkManager.Singleton.GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>();
-                if (transport != null)
-                {
-                    transport.ConnectionData.Address = localIP;
-                }
-
+                // Start host for multiplayer
                 NetworkManager.Singleton.StartHost();
+                var transport = NetworkManager.Singleton.GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>();
 
                 if (transport != null)
                 {
@@ -99,6 +89,7 @@ public class UIManager : MonoBehaviour
                     HostIpInfo.SetText("Host started, but no transport found.");
                 }
 
+                // Switch to multiplayer
                 GameState.IsSinglePlayer = false;
             });
 
@@ -107,7 +98,7 @@ public class UIManager : MonoBehaviour
                 ipInput.gameObject.SetActive(!ipInput.gameObject.activeSelf);
             });
 
-           enterButton.onClick.AddListener(() =>
+            enterButton.onClick.AddListener(() =>
             {
                 if (!hasNetworkManager)
                 {
@@ -116,159 +107,33 @@ public class UIManager : MonoBehaviour
                     return;
                 }
 
-                string enteredIp = ipInput.text;
+                string ipAddress = ipInput.text.Trim();
+                if (string.IsNullOrEmpty(ipAddress)) ipAddress = "127.0.0.1";
 
-                // If the input is empty, start the host discovery
-                if (string.IsNullOrEmpty(enteredIp))
+                var transport = NetworkManager.Singleton.GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>();
+                if (transport != null)
                 {
-                    NotificationText.SetText("Discovering host...");
-                    StartCoroutine(DiscoverHostAndConnect());
+                    transport.ConnectionData.Address = ipAddress;
+                    NetworkManager.Singleton.StartClient();
+
+                    Debug.Log("Client attempting to join host at " + ipAddress);
+                    NetworkManager.Singleton.OnClientConnectedCallback += (ulong clientId) =>
+                    {
+                        if (NetworkManager.Singleton.LocalClientId == clientId)
+                        {
+                            NotificationText.SetText("Connected to host!");
+                        }
+                    };
+
+                    // Switch to multiplayer
+                    GameState.IsSinglePlayer = false;
                 }
                 else
                 {
-                    // Ensure the input is a valid IP format
-                    if (!IsValidIP(enteredIp))
-                    {
-                        NotificationText.SetText("Invalid IP address.");
-                        return;
-                    }
-
-                    ConnectToHost(enteredIp);
+                    Debug.LogError("No transport found! Cannot connect.");
+                    NotificationText.SetText("Error: No transport found.");
                 }
             });
-
-            // Helper method to validate IP format
-
-
-
-                    }
-    }
-    private bool IsValidIP(string ip)
-    {
-        string[] parts = ip.Split('.');
-        if (parts.Length == 4)
-        {
-            foreach (string part in parts)
-            {
-                if (!int.TryParse(part, out int byteValue) || byteValue < 0 || byteValue > 255)
-                {
-                    return false;
-                }
-            }
-            return true;
         }
-        return false;
-    }
-    private IEnumerator DiscoverHostAndConnect()
-    {
-        // Set up UDP client to broadcast to the network
-        udpClient = new UdpClient();
-        endPoint = new IPEndPoint(IPAddress.Broadcast, 7777); // Use a broadcast port
-
-        // Send broadcast message
-        byte[] data = System.Text.Encoding.UTF8.GetBytes("DISCOVER_SERVER");
-        udpClient.Send(data, data.Length, endPoint);
-
-        // Wait for a response (10-second timeout)
-        float timeout = 10f;
-        string hostIp = string.Empty;
-
-        while (timeout > 0f)
-        {
-            if (udpClient.Available > 0)
-            {
-                byte[] response = udpClient.Receive(ref endPoint);
-                string message = System.Text.Encoding.UTF8.GetString(response);
-
-                if (message.StartsWith("SERVER_RESPONSE"))
-                {
-                    hostIp = message.Split(':')[1];
-                    break;
-                }
-            }
-
-            timeout -= Time.deltaTime;
-            yield return null;
-        }
-
-        if (string.IsNullOrEmpty(hostIp))
-        {
-            NotificationText.SetText("Host not found. Please check the network.");
-        }
-        else
-        {
-            // Connect to the discovered host
-            NotificationText.SetText("Found Host: " + hostIp);
-            ConnectToHost(hostIp);
-        }
-
-        udpClient.Close();
-    }
-
-    private void ConnectToHost(string hostIp)
-    {
-        // If no IP is provided, default to localhost
-        string ipAddress = string.IsNullOrEmpty(hostIp) ? "127.0.0.1" : hostIp;
-
-        var transport = NetworkManager.Singleton.GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>();
-        if (transport != null)
-        {
-            transport.ConnectionData.Address = ipAddress;
-
-            NotificationText.SetText("Connecting to host...");
-            StartCoroutine(ConnectionTimeoutCheck(10f)); // Timeout after 10 seconds
-
-            NetworkManager.Singleton.StartClient();
-
-            Debug.Log("Client attempting to join host at " + ipAddress);
-
-            // Callback to confirm connection
-            NetworkManager.Singleton.OnClientConnectedCallback += (ulong clientId) =>
-            {
-                if (NetworkManager.Singleton.LocalClientId == clientId)
-                {
-                    StopAllCoroutines(); // Stop the timeout check if connected
-                    NotificationText.SetText("Connected to host!");
-                }
-            };
-
-            GameState.IsSinglePlayer = false;
-        }
-        else
-        {
-            Debug.LogError("No transport found! Cannot connect.");
-            NotificationText.SetText("Error: No transport found.");
-        }
-    }
-
-    private IEnumerator ConnectionTimeoutCheck(float timeoutDuration)
-    {
-        float elapsed = 0f;
-
-        while (elapsed < timeoutDuration)
-        {
-            if (NetworkManager.Singleton.IsConnectedClient)
-            {
-                yield break; // Already connected
-            }
-
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        NotificationText.SetText("Connection timed out. Check IP and try again.");
-        Debug.LogWarning("Connection attempt timed out.");
-    }
-
-    private string GetLocalWiFiIPAddress()
-    {
-        foreach (var ip in Dns.GetHostEntry(Dns.GetHostName()).AddressList)
-        {
-            if (ip.AddressFamily == AddressFamily.InterNetwork)
-            {
-                return ip.ToString();  // Return first IPv4 found
-            }
-        }
-        return "127.0.0.1"; // Default fallback
     }
 }
