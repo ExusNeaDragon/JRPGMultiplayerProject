@@ -4,6 +4,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Unity.Netcode;
 using MyGameNamespace;
+using System.Net;
+using System.Net.Sockets;
 using UnityEngine.InputSystem.LowLevel;
 
 public class UIManager : MonoBehaviour
@@ -76,9 +78,15 @@ public class UIManager : MonoBehaviour
                     return;
                 }
 
-                // Start host for multiplayer
-                NetworkManager.Singleton.StartHost();
+                string localIP = GetLocalWiFiIPAddress();
+
                 var transport = NetworkManager.Singleton.GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>();
+                if (transport != null)
+                {
+                    transport.ConnectionData.Address = localIP;
+                }
+
+                NetworkManager.Singleton.StartHost();
 
                 if (transport != null)
                 {
@@ -89,7 +97,6 @@ public class UIManager : MonoBehaviour
                     HostIpInfo.SetText("Host started, but no transport found.");
                 }
 
-                // Switch to multiplayer
                 GameState.IsSinglePlayer = false;
             });
 
@@ -136,4 +143,16 @@ public class UIManager : MonoBehaviour
             });
         }
     }
+    private string GetLocalWiFiIPAddress()
+    {
+        foreach (var ip in Dns.GetHostEntry(Dns.GetHostName()).AddressList)
+        {
+            if (ip.AddressFamily == AddressFamily.InterNetwork)
+            {
+                return ip.ToString();  // Return first IPv4 found
+            }
+        }
+        return "127.0.0.1"; // Default fallback
+    }
+
 }
