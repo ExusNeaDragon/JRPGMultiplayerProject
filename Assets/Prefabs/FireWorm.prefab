@@ -251,7 +251,7 @@ MonoBehaviour:
   localMaxHealth: 100
   localCurrentHealth: 100
   moveSpeed: 3
-  attackDamage: 30
+  attackDamage: 15
   attackRange: 1.5
   chaseRange: 7
   projectileRange: 5
